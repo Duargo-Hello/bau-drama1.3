@@ -9,34 +9,33 @@
 
 <body>
   <!-- Container principal -->
-<div class="container">
+  <div class="container">
 
-  <!-- Título da página -->
-  <h1>➕ Cadastro de Doramas</h1>
+    <!-- Título da página -->
+    <h1>➕ Cadastro de Doramas</h1>
 
-  <!-- Formulário de Cadastro -->
-  <form id="formCadastro">
-    <input type="text" id="titulo" placeholder="Título do Dorama" required />
-    <input type="text" id="data" placeholder="Data de Lançamento" />
-    <input type="text" id="categoria" placeholder="Categoria" />
-    <input type="number" id="episodios" placeholder="Quantidade de Episódios" />
-    <input type="text" id="nacionalidade" placeholder="Nacionalidade" />
-    <input type="text" id="duracao" placeholder="Duração média (ex: 60min)" />
-    <textarea id="descricao" placeholder="Descrição" rows="4"></textarea>
-  <input type="file" id="imagem" accept="image/*" />
-    <input type="text" id="link" placeholder="Link do Dorama (opcional)" />
-    <!-- Botão para salvar o dorama -->
-    <button type="submit">Salvar Dorama</button>
+    <!-- Formulário de Cadastro -->
+    <form id="formCadastro">
+      <input type="text" id="titulo" placeholder="Título do Dorama" required />
+      <input type="text" id="data" placeholder="Data de Lançamento" />
+      <input type="text" id="categoria" placeholder="Categoria" />
+      <input type="number" id="episodios" placeholder="Quantidade de Episódios" />
+      <input type="text" id="nacionalidade" placeholder="Nacionalidade" />
+      <input type="text" id="duracao" placeholder="Duração média (ex: 60min)" />
+      <textarea id="descricao" placeholder="Descrição" rows="4"></textarea>
+       <input type="file" id="imagem" accept="image/*" capture="environment" />
+      <input type="text" id="link" placeholder="Link do Dorama (opcional)" />
+      
+      <!-- Botão para salvar o dorama -->
+      <button type="submit">Salvar Dorama</button>
 
-    <!-- Link para voltar à lista de doramas -->
-    <a href="index.html" style="padding: 9px;">⬅️ Voltar à Lista</a>
+      <!-- Link para voltar à lista de doramas -->
+      <a href="index.html" style="padding: 9px;">⬅️ Voltar à Lista</a>
+    </form>
 
-  </form>
-
-</div>
+  </div>
 
 <script>
-// Função para lidar com o envio do formulário
 document.getElementById('formCadastro').addEventListener('submit', function(e) {
   e.preventDefault();
 
@@ -47,8 +46,8 @@ document.getElementById('formCadastro').addEventListener('submit', function(e) {
   const nacionalidade = document.getElementById('nacionalidade').value;
   const duracao = document.getElementById('duracao').value;
   const descricao = document.getElementById('descricao').value;
-  const imagem = document.getElementById('imagem').value.trim();
   const link = document.getElementById('link').value;
+  const imagemInput = document.getElementById('imagem');
 
   if (!titulo) {
     alert("O título é obrigatório!");
@@ -56,32 +55,44 @@ document.getElementById('formCadastro').addEventListener('submit', function(e) {
   }
 
   const doramas = JSON.parse(localStorage.getItem("doramas")) || [];
-  const novoDorama = {
-    id: Date.now(),
-    titulo,
-    data,
-    categoria,
-    episodios,
-    nacionalidade,
-    duracao,
-    descricao,
-    imagem: imagem || "imagens/sem-imagem.jpg",
-    link
-  };
 
-  // Verifica se já existe um dorama com o mesmo título
   const tituloExistente = doramas.find(d => d.titulo === titulo);
   if (tituloExistente) {
     alert("Já existe um dorama cadastrado com este título.");
     return;
   }
 
-  // Adiciona o novo dorama ao array e salva no localStorage
-  doramas.push(novoDorama);
-  localStorage.setItem("doramas", JSON.stringify(doramas));
-  alert("Dorama cadastrado com sucesso!");
-  window.location.href = "index.html";
+  function salvarDorama(imagemBase64) {
+    const novoDorama = {
+      id: Date.now(),
+      titulo,
+      data,
+      categoria,
+      episodios,
+      nacionalidade,
+      duracao,
+      descricao,
+      imagem: imagemBase64 || "imagens/sem-imagem.jpg",
+      link
+    };
+
+    doramas.push(novoDorama);
+    localStorage.setItem("doramas", JSON.stringify(doramas));
+    alert("Dorama cadastrado com sucesso!");
+    window.location.href = "index.html";
+  }
+
+  if (imagemInput.files && imagemInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      salvarDorama(event.target.result); // Base64 da imagem
+    };
+    reader.readAsDataURL(imagemInput.files[0]);
+  } else {
+    salvarDorama(null); // Nenhuma imagem selecionada
+  }
 });
 </script>
+
 </body>
 </html>
