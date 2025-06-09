@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lista de Doramas</title>
+  <link rel="stylesheet" href="../Baú de Drama 1.3/style.css" />
+</head>
+<body>
+
+<div class="container">
+  <div class="filtros">
+    <!-- Filtros de pesquisa -->
+    <input type="text" id="pesquisaTitulo" placeholder="🔍 Buscar por título..." />
+
+    <!-- Botão para limpar filtros -->
+    <button onclick="limparFiltros()">Limpar Filtros</button>
+
+    <!-- Filtros de categoria e ordenação -->
+    <select id="filtroCategoria">
+      <option value="">Filtrar por categoria</option>
+      <option value="Romance">Romance</option>
+      <option value="Comédia">Comédia</option>
+      <option value="Ação">Ação</option>
+      <option value="Drama">Drama</option>
+      <option value="Suspense">Suspense</option>
+      <option value="Fantasia">Fantasia</option>
+      <option value="Histórico">Histórico</option>
+      <option value="Outro">Outro</option>
+    </select>
+    <select id="ordenarPor">
+      <option value="">Ordenar por</option>
+      <option value="titulo">Título</option>
+      <option value="data">Data</option>
+    </select>
+  </div>
+
+  <!-- Título da página -->
+  <h1>📃 Lista de Doramas</h1>
+  <!-- Link para cadastrar novo dorama -->
+  <a href="cadastro.html">➕ Cadastrar Novo Dorama</a>
+  <div id="listaDoramas"></div>
+</div>
+
+<!-- Modal para edição de dorama -->
+<div id="modalEditar" style="display:none;" class="modal">
+  <div class="modal-conteudo">
+    <h2>Editar Dorama</h2>
+    <input type="hidden" id="edit-id">
+    <input type="text" id="edit-titulo" placeholder="Título">
+    <input type="text" id="edit-data" placeholder="Data">
+    <input type="text" id="edit-categoria" placeholder="Categoria">
+    <input type="text" id="edit-episodios" placeholder="Episódios">
+    <input type="text" id="edit-nacionalidade" placeholder="Nacionalidade">
+    <input type="text" id="edit-duracao" placeholder="Duração">
+    <input type="text" id="edit-descricao" placeholder="Descrição">
+    <input type="text" id="edit-imagem" placeholder="URL da imagem">
+    <input type="text" id="edit-link" placeholder="Link do Dorama (opcional)">
+    <!-- buttons salvar e cancelar -->
+    <button onclick="salvarEdicao()">Salvar</button>
+    <button onclick="fecharModal()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+  // Carregar os doramas do localStorage e exibir
+const imagemPadrao = "imagens/sem-imagem.jpg";
+const listaDramasContainer = document.getElementById('listaDoramas');
+const inputPesquisa = document.getElementById('pesquisaTitulo');
+const selectCategoria = document.getElementById('filtroCategoria');
+const selectOrdenar = document.getElementById('ordenarPor');
+
+// edit-o modal
+function editarDorama(id) {
+  const doramas = JSON.parse(localStorage.getItem("doramas")) || [];
+  const dorama = doramas.find(d => d.id === id);
+  if (dorama) {
+    document.getElementById('edit-id').value = dorama.id;
+    document.getElementById('edit-titulo').value = dorama.titulo;
+    document.getElementById('edit-data').value = dorama.data;
+    document.getElementById('edit-categoria').value = dorama.categoria;
+    document.getElementById('edit-episodios').value = dorama.episodios;
+    document.getElementById('edit-nacionalidade').value = dorama.nacionalidade;
+    document.getElementById('edit-duracao').value = dorama.duracao;
+    document.getElementById('edit-descricao').value = dorama.descricao;
+    document.getElementById('edit-imagem').value = dorama.imagem;
+    document.getElementById('edit-link').value = dorama.link || "";
+    document.getElementById('modalEditar').style.display = 'flex';
+  }
+}
+
+// Salvar a edição do dorama
+function salvarEdicao() {
+  const id = parseInt(document.getElementById('edit-id').value);
+  const doramas = JSON.parse(localStorage.getItem("doramas")) || [];
+  const index = doramas.findIndex(d => d.id === id);
+  const titulo = document.getElementById('edit-titulo').value.trim();
+  if (!titulo) {
+    alert("O título é obrigatório!");
+    return;
+  }
+  if (index !== -1) {
+    doramas[index] = {
+      id: id,
+      titulo: titulo,
+      data: document.getElementById('edit-data').value,
+      categoria: document.getElementById('edit-categoria').value,
+      episodios: document.getElementById('edit-episodios').value,
+      nacionalidade: document.getElementById('edit-nacionalidade').value,
+      duracao: document.getElementById('edit-duracao').value,
+      descricao: document.getElementById('edit-descricao').value,
+      imagem: document.getElementById('edit-imagem').value,
+      link: document.getElementById('edit-link').value
+    };
+    localStorage.setItem("doramas", JSON.stringify(doramas));
+    filtrarDramas();
+    fecharModal();
+  }
+}
+
+// Excluir um dorama
+function excluirDorama(id) {
+  if (confirm("Deseja realmente excluir este dorama?")) {
+    let doramas = JSON.parse(localStorage.getItem("doramas")) || [];
+    doramas = doramas.filter(d => d.id !== id);
+    localStorage.setItem("doramas", JSON.stringify(doramas));
+    filtrarDramas();
+  }
+}
+
+// Exibir os doramas filtrados
+function exibirDramas(filtrados) {
+  listaDramasContainer.innerHTML = '';
+  if (filtrados.length === 0) {
+    listaDramasContainer.innerHTML = "<p>Nenhum dorama cadastrado ainda.</p>";
+    return;
+  }
+  filtrados.forEach(dorama => {
+    const card = document.createElement("div");
+    card.classList.add("dorama-card");
+    const descricaoCurta = dorama.descricao.length > 100 ? dorama.descricao.slice(0, 100) + '...' : dorama.descricao;
+    card.innerHTML = `
+      <img src="${dorama.imagem || imagemPadrao}" alt="${dorama.titulo}">
+      <h2 title="${dorama.titulo}">${dorama.titulo}</h2>
+      <p><strong>Data:</strong> ${dorama.data}</p>
+      <p><strong>Categoria:</strong> ${dorama.categoria}</p>
+      <p><strong>Episódios:</strong> ${dorama.episodios}</p>
+      <p><strong>Nacionalidade:</strong> ${dorama.nacionalidade}</p>
+      <p><strong>Duração:</strong> ${dorama.duracao}</p>
+      <p>
+        <strong style="color:gold;">Descrição:</strong>
+        <span class="descricao-limitada" style="color:gold;" data-id="${dorama.id}">
+          ${descricaoCurta}
+        </span>
+        <span class="ler-mais" onclick="toggleDescricao(${dorama.id})">Ler mais</span>
+      </p>
+      ${dorama.link ? `<p style="margin-top:10px;"><a href="${dorama.link}" target="_blank">🔗 Ver Dorama</a></p>` : ""}
+      <button onclick="editarDorama(${dorama.id})">✏️ Editar</button>
+      <button onclick="excluirDorama(${dorama.id})">🗑️ Excluir</button>
+    `;
+    listaDramasContainer.appendChild(card);
+  });
+}
+
+// Filtrar os doramas com base na pesquisa, categoria e ordenação
+function filtrarDramas() {
+  const texto = inputPesquisa.value.toLowerCase();
+  const categoria = selectCategoria.value;
+  const ordenarPor = selectOrdenar.value;
+  let doramas = JSON.parse(localStorage.getItem("doramas")) || [];
+
+  let filtrados = doramas.filter(dorama => {
+    const tituloMatch = dorama.titulo.toLowerCase().includes(texto);
+    const categoriaMatch = !categoria || dorama.categoria === categoria;
+    return tituloMatch && categoriaMatch;
+  });
+
+  if (ordenarPor === "titulo") {
+    filtrados.sort((a, b) => a.titulo.localeCompare(b.titulo));
+  } else if (ordenarPor === "data") {
+    filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
+  }
+
+  exibirDramas(filtrados);
+}
+// Fechar o modal de edição
+function fecharModal() {
+  document.getElementById('modalEditar').style.display = 'none';
+}
+
+// Função para alternar a descrição
+function toggleDescricao(id) {
+  const span = document.querySelector(`.descricao-limitada[data-id="${id}"]`);
+  const botao = span?.nextElementSibling;
+  const doramas = JSON.parse(localStorage.getItem("doramas")) || [];
+  const dorama = doramas.find(d => d.id === id);
+
+  if (!span || !botao || !dorama) return;
+
+  const expandido = botao.innerText === "Ler menos";
+
+  if (expandido) {
+    span.textContent = dorama.descricao.slice(0, 100) + '...';
+    botao.textContent = "Ler mais";
+  } else {
+    span.textContent = dorama.descricao;
+    botao.textContent = "Ler menos";
+  }
+}
+
+// filtrarDramas ao carregar a página e ao digitar
+inputPesquisa.addEventListener('input', filtrarDramas);
+selectCategoria.addEventListener('change', filtrarDramas);
+selectOrdenar.addEventListener('change', filtrarDramas);
+document.addEventListener("DOMContentLoaded", () => filtrarDramas());
+
+inputPesquisa.addEventListener('input', () => {
+  selectCategoria.selectedIndex = 0;
+  filtrarDramas();
+});
+
+// Limpar filtros
+function limparFiltros() {
+  inputPesquisa.value = "";
+  selectCategoria.value = "";
+  selectOrdenar.value = "";
+  filtrarDramas();
+}
+</script>
+
+</body>
+</html>
