@@ -75,7 +75,7 @@
 </div>
 
 <script>
-  // Carregar os doramas do localStorage e exibir
+   // Carregar os doramas do localStorage e exibir
 const imagemPadrao = "imagens/sem-imagem.jpg";
 const listaDramasContainer = document.getElementById('listaDoramas');
 const inputPesquisa = document.getElementById('pesquisaTitulo');
@@ -237,6 +237,35 @@ function limparFiltros() {
   selectCategoria.value = "";
   selectOrdenar.value = "";
   filtrarDramas();
+}
+inputPesquisa.addEventListener('input', () => {
+  selectCategoria.value = "";
+  selectOrdenar.value = "";
+  filtrarDramas();
+});
+
+// Modifique a função filtrarDramas para pesquisar também por ano (data) e categoria
+function filtrarDramas() {
+  const texto = inputPesquisa.value.toLowerCase();
+  const categoria = selectCategoria.value;
+  const ordenarPor = selectOrdenar.value;
+  let doramas = JSON.parse(localStorage.getItem("doramas")) || [];
+
+  let filtrados = doramas.filter(dorama => {
+    const tituloMatch = dorama.titulo.toLowerCase().includes(texto);
+    const dataMatch = dorama.data && dorama.data.toLowerCase().includes(texto);
+    const categoriaMatchInput = dorama.categoria && dorama.categoria.toLowerCase().includes(texto);
+    const categoriaMatchFiltro = !categoria || dorama.categoria === categoria;
+    return (tituloMatch || dataMatch || categoriaMatchInput) && categoriaMatchFiltro;
+  });
+
+  if (ordenarPor === "titulo") {
+    filtrados.sort((a, b) => a.titulo.localeCompare(b.titulo));
+  } else if (ordenarPor === "data") {
+    filtrados.sort((a, b) => new Date(b.data) - new Date(a.data));
+  }
+
+  exibirDramas(filtrados);
 }
 </script>
 
